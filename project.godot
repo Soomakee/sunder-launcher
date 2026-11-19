@@ -1,0 +1,23 @@
+; Engine configuration file.
+; Sunder Launcher: keeps the game up to date from GitHub Releases, then starts it.
+
+config_version=5
+
+[application]
+
+config/name="Sunder Launcher"
+config/version="1.0.0"
+run/main_scene="res://Launcher.tscn"
+run/low_processor_mode=true
+config/features=PackedStringArray("4.7")
+
+[display]
+
+window/size/viewport_width=520
+window/size/viewport_height=240
+window/size/resizable=false
+
+[rendering]
+
+renderer/rendering_method="gl_compatibility"
+renderer/rendering_method.mobile="gl_compatibility"
