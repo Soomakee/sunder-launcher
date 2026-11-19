@@ -119,6 +119,7 @@ $consoleExe = Join-Path $GameDir "builds\Sunder.console.exe"
 if (Test-Path $consoleExe) { $gameFiles += $consoleExe }
 Compress-Archive -Path $gameFiles -DestinationPath (Join-Path $dist "Sunder.zip")
 Compress-Archive -Path $launcherExe -DestinationPath (Join-Path $dist "SunderLauncher.zip")
+Copy-Item $launcherExe (Join-Path $dist "SunderLauncher.exe")   # bare exe: players can't run it from inside a zip by mistake
 Set-Content -Path (Join-Path $dist "version.txt") -Value $Version -NoNewline -Encoding ascii
 Get-ChildItem $dist | ForEach-Object { "{0,-22} {1,8:N1} MB" -f $_.Name, ($_.Length / 1MB) } | Out-Host
 
@@ -133,11 +134,11 @@ Step "Uploading release v$Version to github.com/$Repo"
 if ($Notes -eq "") { $Notes = "Sunder $Version" }
 $ErrorActionPreference = "Continue"   # gh prints upload progress on stderr
 gh release create "v$Version" `
-    (Join-Path $dist "Sunder.zip") (Join-Path $dist "version.txt") (Join-Path $dist "SunderLauncher.zip") `
+    (Join-Path $dist "Sunder.zip") (Join-Path $dist "version.txt") (Join-Path $dist "SunderLauncher.zip") (Join-Path $dist "SunderLauncher.exe") `
     --repo $Repo --title "Sunder $Version" --notes $Notes --latest
 if ($LASTEXITCODE -ne 0) { Die "Upload failed. The build is still in $dist; run the script again to retry." }
 
 Write-Host ""
 Write-Host "Published Sunder $Version. Players get it next time they open the launcher." -ForegroundColor Green
 Write-Host "Launcher download link for new players:"
-Write-Host "  https://github.com/$Repo/releases/latest/download/SunderLauncher.zip"
+Write-Host "  https://github.com/$Repo/releases/latest/download/SunderLauncher.exe"

@@ -55,9 +55,11 @@ re-download (the old one keeps working).
 
 ## For players
 
-1. Download **SunderLauncher.zip**:
-   https://github.com/Soomakee/sunder-launcher/releases/latest/download/SunderLauncher.zip
-2. Unzip it into its own folder, e.g. `Documents\Sunder` (not Program Files, it needs to write there).
+1. Download **SunderLauncher.exe**:
+   https://github.com/Soomakee/sunder-launcher/releases/latest/download/SunderLauncher.exe
+2. Move it into its own folder, e.g. `Documents\Sunder` (not Program Files or Downloads; it puts the game next to itself).
+   (A SunderLauncher.zip is also in each release. If you use it, **Extract All** first; running the exe from
+   inside the zip fails with "Couldn't load project data".)
 3. Double-click **SunderLauncher.exe**. The first time it downloads the game (~35 MB), then starts it.
    Always open Sunder through the launcher and you'll always have the newest version.
 
