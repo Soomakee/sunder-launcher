@@ -30,6 +30,15 @@ $Godot       = "C:\Users\Isaiah\Downloads\Godot_v4.7.2-stable_win64.exe\Godot_v4
 $Preset      = "Windows Desktop"
 # ------------------------------------------------------------------------------
 
+# Runs gh quietly and returns its exit code. Windows PowerShell 5.1 turns a native
+# command's stderr into a terminating error under ErrorActionPreference=Stop, so relax it here.
+function Invoke-GhQuiet {
+    $old = $ErrorActionPreference
+    $ErrorActionPreference = "Continue"
+    try { & gh @args *> $null } finally { $ErrorActionPreference = $old }
+    return $LASTEXITCODE
+}
+
 function Step($text) { Write-Host ""; Write-Host "==> $text" -ForegroundColor Cyan }
 function Die($text)  { Write-Host ""; Write-Host "ERROR: $text" -ForegroundColor Red; exit 1 }
 
@@ -39,8 +48,7 @@ if (-not $DryRun) {
     if (-not (Get-Command gh -ErrorAction SilentlyContinue)) {
         Die "GitHub CLI (gh) isn't installed. Run: winget install GitHub.cli   then: gh auth login"
     }
-    gh auth status *> $null
-    if ($LASTEXITCODE -ne 0) { Die "GitHub CLI isn't signed in. Run: gh auth login" }
+    if ((Invoke-GhQuiet auth status) -ne 0) { Die "GitHub CLI isn't signed in. Run: gh auth login" }
 }
 
 # --- 1. Version ----------------------------------------------------------------
@@ -53,8 +61,7 @@ $current = $m.Groups[1].Value
 
 function Test-ReleaseExists($v) {
     if ($DryRun) { return $false }
-    gh release view "v$v" --repo $Repo *> $null
-    return ($LASTEXITCODE -eq 0)
+    return ((Invoke-GhQuiet release view "v$v" --repo $Repo) -eq 0)
 }
 function Get-NextPatch($v) {
     $parts = $v.Split(".")
@@ -82,7 +89,9 @@ Step "Exporting the game (takes a minute)"
 $gameExe = Join-Path $GameDir "builds\Sunder.exe"
 New-Item -ItemType Directory -Force (Split-Path $gameExe) | Out-Null
 $started = Get-Date
+$ErrorActionPreference = "Continue"
 & $Godot --headless --path $GameDir --export-debug $Preset $gameExe 2>&1 | Out-Host
+$ErrorActionPreference = "Stop"
 if (-not (Test-Path $gameExe) -or (Get-Item $gameExe).LastWriteTime -lt $started) {
     Die "Game export failed (see the Godot output above)."
 }
@@ -92,7 +101,9 @@ Step "Exporting the launcher"
 $launcherExe = Join-Path $LauncherDir "builds\SunderLauncher.exe"
 New-Item -ItemType Directory -Force (Split-Path $launcherExe) | Out-Null
 $started = Get-Date
+$ErrorActionPreference = "Continue"
 & $Godot --headless --path $LauncherDir --export-release $Preset $launcherExe 2>&1 | Out-Host
+$ErrorActionPreference = "Stop"
 if (-not (Test-Path $launcherExe) -or (Get-Item $launcherExe).LastWriteTime -lt $started) {
     Die "Launcher export failed (see the Godot output above)."
 }
@@ -120,6 +131,7 @@ if ($DryRun) {
 # --- 5. Upload -----------------------------------------------------------------
 Step "Uploading release v$Version to github.com/$Repo"
 if ($Notes -eq "") { $Notes = "Sunder $Version" }
+$ErrorActionPreference = "Continue"   # gh prints upload progress on stderr
 gh release create "v$Version" `
     (Join-Path $dist "Sunder.zip") (Join-Path $dist "version.txt") (Join-Path $dist "SunderLauncher.zip") `
     --repo $Repo --title "Sunder $Version" --notes $Notes --latest
